@@ -1,0 +1,109 @@
+import pygame
+import random
+
+# Initialize the game
+pygame.init()
+
+# Set up the screen
+screen_width = 800
+screen_height = 600
+screen = pygame.display.set_mode((screen_width, screen_height))
+pygame.display.set_caption("Tower Defense Game")
+
+# Define colors
+BLACK = (0, 0, 0)
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+
+# Set up the player
+player_size = 50
+player_pos = [screen_width // 2, screen_height - player_size * 2]
+
+# Set up the enemy
+enemy_size = 50
+enemy_pos = [random.randint(0, screen_width - enemy_size), 0]
+enemy_list = [enemy_pos]
+
+# Set up the towers
+tower_size = 80
+tower_pos = [random.randint(0, screen_width - tower_size), random.randint(0, screen_height - tower_size)]
+tower_list = [tower_pos]
+
+# Set up game variables
+game_over = False
+score = 0
+
+# Set up the clock
+clock = pygame.time.Clock()
+
+# Set up the font
+font = pygame.font.Font(None, 36)
+
+# Game loop
+while not game_over:
+    # Handle events
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            game_over = True
+
+    # Update player position
+    player_x = player_pos[0]
+    player_y = player_pos[1]
+
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        player_x -= 5
+    if keys[pygame.K_RIGHT]:
+        player_x += 5
+
+    player_pos = [player_x, player_y]
+
+    # Update enemy position
+    for idx, enemy_pos in enumerate(enemy_list):
+        if enemy_pos[1] >= 0 and enemy_pos[1] < screen_height:
+            enemy_pos[1] += 10
+        else:
+            enemy_list.pop(idx)
+            score += 1
+
+    # Update tower position
+    for idx, tower_pos in enumerate(tower_list):
+        if tower_pos[1] >= 0 and tower_pos[1] < screen_height:
+            tower_pos[1] += random.randint(1, 3)
+
+    # Detect collisions
+    for enemy_pos in enemy_list:
+        if detect_collision(player_pos, enemy_pos):
+            game_over = True
+        for tower_pos in tower_list:
+            if detect_collision(tower_pos, enemy_pos):
+                enemy_list.remove(enemy_pos)
+                score += 1
+
+    # Draw the background
+    screen.fill(BLACK)
+
+    # Draw the player
+    pygame.draw.rect(screen, WHITE, (player_pos[0], player_pos[1], player_size, player_size))
+
+    # Draw the enemies
+    for enemy_pos in enemy_list:
+        pygame.draw.rect(screen, RED, (enemy_pos[0], enemy_pos[1], enemy_size, enemy_size))
+
+    # Draw the towers
+    for tower_pos in tower_list:
+        pygame.draw.rect(screen, WHITE, (tower_pos[0], tower_pos[1], tower_size, tower_size))
+
+    # Draw the score
+    score_text = "Score: " + str(score)
+    text = font.render(score_text, True, WHITE)
+    screen.blit(text, [10, 10])
+
+    # Update the display
+    pygame.display.update()
+
+    # Set the frame rate
+    clock.tick(30)
+
+# Quit the game
+pygame.quit()
